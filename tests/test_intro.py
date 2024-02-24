@@ -12,14 +12,12 @@ def teardown_module(module):
     pass
 
 
-# tests of hw1 commented to make work CI with dependency conflict
-
-# def test_graph_stats():
-#     s = graph_signature("ls")
-#     assert s == (1687, 1453, ["d", "a"])
+def test_graph_stats():
+    s = graph_signature("ls")
+    assert s == (1687, 1453, ["d", "a"])
 
 
-# def test_2cycled_graph():
-#     save_twocycled_graph(10, 8, ("a", "b"))
-#     g = networkx.drawing.nx_pydot.read_dot("twocycled_10_8.dot")
-#     assert g.number_of_nodes() == 19
+def test_2cycled_graph():
+    save_twocycled_graph(10, 8, ("a", "b"))
+    g = networkx.drawing.nx_pydot.read_dot("twocycled_10_8.dot")
+    assert g.number_of_nodes() == 19
