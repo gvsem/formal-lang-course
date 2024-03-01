@@ -132,12 +132,6 @@ def graph(request) -> MultiDiGraph:
     n_of_nodes = random.randint(1, 20)
     graph = nx.scale_free_graph(n_of_nodes)
 
-    # for i in graph.nodes:
-    #     graph.nodes[i]["is_start"] = graph.in_degree(i) == 0
-    #     graph.nodes[i]["is_final"] = graph.out_degree(i) == 0
-    #     print(str(graph.nodes[i]["is_start"]) +
-    #           " lol " + str(graph.nodes[i]["is_final"]))
-
     for _, _, data in graph.edges(data=True):
         data[LABEL] = random.choice(LABELS)
     for _, data in graph.nodes(data=True):
