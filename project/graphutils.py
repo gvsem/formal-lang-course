@@ -1,4 +1,3 @@
-# import cfpq_data
 from cfpq_data import *
 import networkx
 
