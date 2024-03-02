@@ -121,26 +121,3 @@ def intersect_automata(
                 final.add(State(k))
 
     return FiniteAutomaton(m, start, final, mapping)
-
-
-# def paths_ends(graph: MultiDiGraph, start_nodes: set[int],
-#                final_nodes: set[int], regex: str) -> list[tuple[object, object]]:
-
-#     graph_nfa = graph_to_nfa(graph, start_nodes, final_nodes)
-#     regex_dfa = regex_to_dfa(regex)
-#     intersection = intersect_automata(
-#         nfa_to_mat(graph_nfa), nfa_to_mat(regex_dfa))
-#     closure = transitive_closure(intersection)
-
-#     print(list((k, v.todense()) for k, v in intersection.m.items()))
-#     print(intersection.start)
-#     print(intersection.final)
-#     print(closure)
-
-#     mapping = {v: i for i, v in enumerate(graph_nfa.states)}
-#     nfa_size = len(graph_nfa.states)
-
-#     result = list()
-#     for u, v in zip(*closure.nonzero()):
-#         result.append((mapping[u % nfa_size], mapping[v % nfa_size]))
-#     return result
