@@ -1,9 +1,9 @@
-import networkx
-from networkx import MultiDiGraph
-from project.automaton import paths_ends
-from cfpq_data import *
+# import networkx
+# from networkx import MultiDiGraph
+# from project.automaton import paths_ends
+# from cfpq_data import *
 
-from project.graphutils import save_twocycled_graph
+# from project.graphutils import save_twocycled_graph
 
 
 # def test_path_ends_1():
