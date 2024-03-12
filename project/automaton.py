@@ -127,15 +127,16 @@ def paths_ends(
     graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
 ) -> list[tuple[object, object]]:
 
-    graph_nfa = graph_to_nfa(graph, start_nodes, final_nodes)
-    regex_dfa = regex_to_dfa(regex)
-    intersection = intersect_automata(nfa_to_mat(graph_nfa), nfa_to_mat(regex_dfa))
+    graph_nfa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
+    regex_dfa = nfa_to_mat(regex_to_dfa(regex))
+    intersection = intersect_automata(graph_nfa, regex_dfa)
     closure = transitive_closure(intersection)
 
-    mapping = {v: i for i, v in enumerate(graph_nfa.states)}
-    nfa_size = len(graph_nfa.states)
+    mapping = {v: i for i, v in graph_nfa.mapping.items()}
+    reg_size = len(regex_dfa.mapping)
 
     result = list()
     for u, v in zip(*closure.nonzero()):
-        result.append((mapping[u % nfa_size], mapping[v % nfa_size]))
+        if u in intersection.start and v in intersection.final:
+            result.append((mapping[u // reg_size], mapping[v // reg_size]))
     return result
