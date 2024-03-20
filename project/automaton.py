@@ -6,7 +6,7 @@ from pyformlang.finite_automaton import (
     State,
 )
 import numpy as np
-from scipy.sparse import dok_matrix, kron, csr_array, csr_matrix, block_diag, vstack
+from scipy.sparse import dok_matrix, kron, csr_matrix, block_diag
 
 from project.automata import graph_to_nfa, regex_to_dfa
 
@@ -24,11 +24,18 @@ class FiniteAutomaton:
     final = None
     mapping = None
 
-    def __init__(self, obj: any, start=set(), final=set(), mapping=dict()):
+    def __init__(
+        self,
+        obj: any,
+        start=set(),
+        final=set(),
+        mapping=dict(),
+        matrix_class=dok_matrix,
+    ):
         if isinstance(obj, DeterministicFiniteAutomaton) or isinstance(
             obj, NondeterministicFiniteAutomaton
         ):
-            mat = nfa_to_mat(obj)
+            mat = nfa_to_mat(obj, matrix_class=matrix_class)
             self.m, self.start, self.final, self.mapping = (
                 mat.m,
                 mat.start,
@@ -64,6 +71,7 @@ class FiniteAutomaton:
     def labels(self):
         return self.m.keys()
 
+    # currently unused
     def matrix_of_direct_sum_with(self, other):
         m = dict()
         e = csr_matrix((other.size(), other.size()))
@@ -75,14 +83,16 @@ class FiniteAutomaton:
         return m
 
 
-def nfa_to_mat(automaton: NondeterministicFiniteAutomaton) -> FiniteAutomaton:
+def nfa_to_mat(
+    automaton: NondeterministicFiniteAutomaton, matrix_class=dok_matrix
+) -> FiniteAutomaton:
     states = automaton.to_dict()
     len_states = len(automaton.states)
     mapping = {v: i for i, v in enumerate(automaton.states)}
     m = dict()
 
     for label in automaton.symbols:
-        m[label] = dok_matrix((len_states, len_states), dtype=bool)
+        m[label] = matrix_class((len_states, len_states), dtype=bool)
         for u, edges in states.items():
             if label in edges:
                 for v in as_set(edges[label]):
@@ -124,7 +134,7 @@ def transitive_closure(automaton: FiniteAutomaton):
 
 
 def intersect_automata(
-    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton
+    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton, matrix_class_id="csr"
 ) -> FiniteAutomaton:
     labels = automaton1.m.keys() & automaton2.m.keys()
     m = dict()
@@ -133,7 +143,7 @@ def intersect_automata(
     mapping = dict()
 
     for label in labels:
-        m[label] = kron(automaton1.m[label], automaton2.m[label], "csr")
+        m[label] = kron(automaton1.m[label], automaton2.m[label], matrix_class_id)
 
     for u, i in automaton1.mapping.items():
         for v, j in automaton2.mapping.items():
@@ -141,7 +151,6 @@ def intersect_automata(
             k = len(automaton2.mapping) * i + j
             mapping[State(k)] = k
 
-            assert isinstance(u, State)
             if u in automaton1.start and v in automaton2.start:
                 start.add(State(k))
 
@@ -151,13 +160,13 @@ def intersect_automata(
     return FiniteAutomaton(m, start, final, mapping)
 
 
-def paths_ends(
-    graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
+def reachability_with_constraints_transitive(
+    graph_nfa, regex_dfa, matrix_class=dok_matrix, matrix_class_id="csr"
 ) -> list[tuple[object, object]]:
 
-    graph_nfa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
-    regex_dfa = nfa_to_mat(regex_to_dfa(regex))
-    intersection = intersect_automata(graph_nfa, regex_dfa)
+    intersection = intersect_automata(
+        graph_nfa, regex_dfa, matrix_class_id=matrix_class_id
+    )
     closure = transitive_closure(intersection)
 
     mapping = {v: i for i, v in graph_nfa.mapping.items()}
@@ -170,14 +179,34 @@ def paths_ends(
     return result
 
 
+def paths_ends(
+    graph: MultiDiGraph,
+    start_nodes: set[int],
+    final_nodes: set[int],
+    regex: str,
+    matrix_class=dok_matrix,
+    matrix_class_id="csr",
+) -> list[tuple[object, object]]:
+    graph_nfa = nfa_to_mat(
+        graph_to_nfa(graph, start_nodes, final_nodes), matrix_class=matrix_class
+    )
+    regex_dfa = nfa_to_mat(regex_to_dfa(regex), matrix_class=matrix_class)
+    return reachability_with_constraints_transitive(
+        graph_nfa, regex_dfa, matrix_class=matrix_class, matrix_class_id=matrix_class_id
+    )
+
+
 def reachability_with_constraints(
-    fa: FiniteAutomaton, constraints_fa: FiniteAutomaton
+    fa: FiniteAutomaton,
+    constraints_fa: FiniteAutomaton,
+    matrix_class=dok_matrix,
+    matrix_class_id="csr",
 ) -> dict[int, set[int]]:
 
     m, n = constraints_fa.size(), fa.size()
 
     def get_front(s):
-        front = dok_matrix((m, m + n), dtype=bool)
+        front = matrix_class((m, m + n), dtype=bool)
         for i in constraints_fa.start_inds():
             front[i, i] = True
         for i in range(m):
@@ -185,7 +214,7 @@ def reachability_with_constraints(
         return front
 
     def diagonalized(mat):
-        result = dok_matrix(mat.shape, dtype=bool)
+        result = matrix_class(mat.shape, dtype=bool)
         for i in range(mat.shape[0]):
             for j in range(mat.shape[0]):
                 if mat[j, i]:
@@ -195,14 +224,17 @@ def reachability_with_constraints(
     labels = fa.labels() & constraints_fa.labels()
     result = {s: set() for s in fa.start}
     adj = {
-        label: block_diag((constraints_fa.m[label], fa.m[label])) for label in labels
+        label: block_diag(
+            (constraints_fa.m[label], fa.m[label]), format=matrix_class_id
+        )
+        for label in labels
     }
 
     for v in fa.start_inds():
         front = get_front(v)
         for _ in range(m * n):
             front = sum(
-                [dok_matrix((m, m + n), dtype=bool)]
+                [matrix_class((m, m + n), dtype=bool)]
                 + [diagonalized(front @ adj[label]) for label in labels]
             )
             for i in constraints_fa.final_inds():
