@@ -232,13 +232,18 @@ def reachability_with_constraints(
 
     for v in fa.start_inds():
         front = get_front(v)
+        last_nnz = -1
         for _ in range(m * n):
             front = sum(
                 [matrix_class((m, m + n), dtype=bool)]
                 + [diagonalized(front @ adj[label]) for label in labels]
             )
-            for i in constraints_fa.final_inds():
-                for j in fa.final_inds():
-                    if front[i, j + m]:
-                        result[v].add(j)
+            k = front[:, m:].nonzero()
+            for x, y in zip(k[0], k[1]):
+                if x in constraints_fa.final_inds() and y in fa.final_inds():
+                    result[v].add(y)
+            if hash(str(k)) == last_nnz:
+                break
+            last_nnz = hash(str(k))
+
     return result
