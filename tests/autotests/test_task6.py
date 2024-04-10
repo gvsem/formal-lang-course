@@ -13,10 +13,11 @@ from pyformlang import cfg
 
 # Fix import statements in try block to run tests
 try:
-    from project.task2 import graph_to_nfa, regex_to_dfa
-    from project.task3 import FiniteAutomaton
-    from project.task4 import reachability_with_constraints
-    from project.task6 import cfpq_with_hellings
+    from project.automata import graph_to_nfa, regex_to_dfa
+    from project.automaton import FiniteAutomaton
+    from project.automaton import reachability_with_constraints
+    from project.grammar import cfpq_with_hellings
+    from typing import Tuple
 except ImportError:
     pytestmark = pytest.mark.skip("Task 6 is not ready to test!")
 
@@ -164,8 +165,8 @@ class TestReachability:
 
 def test_cfg_to_weak_normal_form_exists():
     try:
-        import project.task6
+        import project.grammar
 
-        assert "cfg_to_weak_normal_form" in dir(project.task6)
+        assert "cfg_to_weak_normal_form" in dir(project.grammar)
     except NameError:
         assert False
