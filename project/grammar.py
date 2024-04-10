@@ -28,7 +28,7 @@ def cfpq_with_hellings(
     final_nodes: set[int] = None,
 ) -> set[Tuple[int, int]]:
 
-    # Weak Homsky Normal Form
+    # Weak Homsky Normal Form -
     # 1. N_i -> t_j
     # 2. N_i -> eps
     # 3. N_i -> N_j N_k
