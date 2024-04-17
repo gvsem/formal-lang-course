@@ -1,6 +1,8 @@
+import scipy
 from project import automaton
 from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
 from typing import Tuple
+from scipy.sparse import dok_matrix, csr_matrix
 
 
 def read_cfgrammar(path, start="S") -> CFG:
@@ -86,3 +88,44 @@ def cfpq_with_hellings(
         for (N_i, v, u) in r
         if v in start_nodes and u in final_nodes and Variable(N_i) == cfg.start_symbol
     }
+
+
+def cfpq_with_matrix(
+    cfg,
+    graph,
+    start_nodes: set[int] = None,
+    final_nodes: set[int] = None,
+) -> set[Tuple[int, int]]:
+
+    cfg = to_weak_normal_form(cfg)
+    n = len(graph.nodes)
+    E = graph.edges.data("label")
+    T = {var: dok_matrix((n, n), dtype=bool) for var in cfg.variables}
+
+    p3 = set()  # N_i -> N_j N_k
+
+    for i, j, tag in E:
+        for p in cfg.productions:
+            if (
+                len(p.body) == 1
+                and isinstance(p.body[0], Variable)
+                and p.body[0].value == tag
+            ):
+                T[p.head][i, j] = True
+            elif len(p.body) == 1 and isinstance(p.body[0], Epsilon):
+                T[p.head] += csr_matrix(scipy.eye(n), dtype=bool)
+            elif len(p.body) == 2:
+                p3.add((p.head, p.body[0], p.body[1]))
+
+    r = {i: node for i, node in enumerate(graph.nodes)}
+    T = {x: csr_matrix(m) for (x, m) in T.items()}
+
+    changed = True
+    while changed:
+        changed = False
+        for N_i, N_j, N_k in p3:
+            prev = T[N_i].nnz
+            T[N_i] += T[N_j] @ T[N_k]
+            changed |= prev != T[N_i].nnz
+
+    return {(r[i], r[j]) for _, m in T.items() for i, j in zip(*m.nonzero())}
