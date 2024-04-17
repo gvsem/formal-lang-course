@@ -1,5 +1,6 @@
 from typing import Iterable
 from networkx import MultiDiGraph
+import pyformlang
 from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
     NondeterministicFiniteAutomaton,
@@ -7,6 +8,7 @@ from pyformlang.finite_automaton import (
 )
 import numpy as np
 from scipy.sparse import dok_matrix, kron, csr_matrix, block_diag
+from pyformlang.cfg import Epsilon
 
 from project.automata import graph_to_nfa, regex_to_dfa
 
@@ -24,6 +26,8 @@ class FiniteAutomaton:
     final = None
     mapping = None
     g = True
+    nullable_symbols = None  # only produced by rsa_to_mat
+    states_count = None  # only produced by rsa_to_mat
 
     def __init__(
         self,
@@ -88,7 +92,10 @@ def nfa_to_mat(
                 for v in as_set(edges[label]):
                     m[label][mapping[u], mapping[v]] = True
 
-    return FiniteAutomaton(m, automaton.start_states, automaton.final_states, mapping)
+    res = FiniteAutomaton(m, automaton.start_states,
+                          automaton.final_states, mapping)
+    res.states_count = len(automaton.states)
+    return res
 
 
 def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
@@ -100,7 +107,8 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
             for v in range(m_size):
                 if automaton.m[label][u, v]:
                     nfa.add_transition(
-                        automaton.mapping_for(u), label, automaton.mapping_for(v)
+                        automaton.mapping_for(
+                            u), label, automaton.mapping_for(v)
                     )
 
     for s in automaton.start:
@@ -109,6 +117,44 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
         nfa.add_final_state(automaton.mapping_for(s))
 
     return nfa
+
+
+def rsm_to_mat(rsm: pyformlang.rsa.RecursiveAutomaton) -> FiniteAutomaton:
+    states = set()
+    start_states = set()
+    final_states = set()
+    nullable_symbols = set()
+
+    for var, p in rsm.boxes.items():
+        for state in p.dfa.states:
+            s = State((var, state.value))
+            states.add(s)
+            if state in p.dfa.start_states:
+                start_states.add(s)
+            if state in p.dfa.final_states:
+                final_states.add(s)
+
+    len_states = len(states)
+    mapping = {v: i for i, v in enumerate(
+        sorted(states, key=lambda x: x.value[1]))}
+
+    m = dict()
+    for var, p in rsm.boxes.items():
+        for src, transition in p.dfa.to_dict().items():
+            for symbol, dst in transition.items():
+                label = symbol.value
+                if symbol not in m:
+                    m[label] = dok_matrix((len_states, len_states), dtype=bool)
+                for target in as_set(dst):
+                    m[label][mapping[State((var, src.value))], mapping[State(
+                        (var, target.value))]] = True
+                if isinstance(dst, Epsilon):
+                    nullable_symbols.add(label)
+
+    result = FiniteAutomaton(m, start_states, final_states, mapping)
+    result.nullable_symbols = nullable_symbols
+    result.states_count = len_states
+    return result
 
 
 def transitive_closure(automaton: FiniteAutomaton):
@@ -137,7 +183,8 @@ def intersect_automata(
     mapping = dict()
 
     for label in labels:
-        m[label] = kron(automaton1.m[label], automaton2.m[label], matrix_class_id)
+        m[label] = kron(automaton1.m[label],
+                        automaton2.m[label], matrix_class_id)
 
     for u, i in automaton1.mapping.items():
         for v, j in automaton2.mapping.items():
@@ -168,7 +215,8 @@ def reachability_with_constraints_transitive(
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start and v in intersection.final:
             result.append(
-                (mapping[u // regex_dfa.size()], mapping[v // regex_dfa.size()])
+                (mapping[u // regex_dfa.size()],
+                 mapping[v // regex_dfa.size()])
             )
     return result
 
