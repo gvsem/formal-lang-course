@@ -92,8 +92,7 @@ def nfa_to_mat(
                 for v in as_set(edges[label]):
                     m[label][mapping[u], mapping[v]] = True
 
-    res = FiniteAutomaton(m, automaton.start_states,
-                          automaton.final_states, mapping)
+    res = FiniteAutomaton(m, automaton.start_states, automaton.final_states, mapping)
     res.states_count = len(automaton.states)
     return res
 
@@ -107,8 +106,7 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
             for v in range(m_size):
                 if automaton.m[label][u, v]:
                     nfa.add_transition(
-                        automaton.mapping_for(
-                            u), label, automaton.mapping_for(v)
+                        automaton.mapping_for(u), label, automaton.mapping_for(v)
                     )
 
     for s in automaton.start:
@@ -135,8 +133,7 @@ def rsm_to_mat(rsm: pyformlang.rsa.RecursiveAutomaton) -> FiniteAutomaton:
                 final_states.add(s)
 
     len_states = len(states)
-    mapping = {v: i for i, v in enumerate(
-        sorted(states, key=lambda x: x.value[1]))}
+    mapping = {v: i for i, v in enumerate(sorted(states, key=lambda x: x.value[1]))}
 
     m = dict()
     for var, p in rsm.boxes.items():
@@ -146,8 +143,10 @@ def rsm_to_mat(rsm: pyformlang.rsa.RecursiveAutomaton) -> FiniteAutomaton:
                 if symbol not in m:
                     m[label] = dok_matrix((len_states, len_states), dtype=bool)
                 for target in as_set(dst):
-                    m[label][mapping[State((var, src.value))], mapping[State(
-                        (var, target.value))]] = True
+                    m[label][
+                        mapping[State((var, src.value))],
+                        mapping[State((var, target.value))],
+                    ] = True
                 if isinstance(dst, Epsilon):
                     nullable_symbols.add(label)
 
@@ -183,8 +182,7 @@ def intersect_automata(
     mapping = dict()
 
     for label in labels:
-        m[label] = kron(automaton1.m[label],
-                        automaton2.m[label], matrix_class_id)
+        m[label] = kron(automaton1.m[label], automaton2.m[label], matrix_class_id)
 
     for u, i in automaton1.mapping.items():
         for v, j in automaton2.mapping.items():
@@ -215,8 +213,7 @@ def reachability_with_constraints_transitive(
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start and v in intersection.final:
             result.append(
-                (mapping[u // regex_dfa.size()],
-                 mapping[v // regex_dfa.size()])
+                (mapping[u // regex_dfa.size()], mapping[v // regex_dfa.size()])
             )
     return result
 

@@ -38,8 +38,7 @@ REGEXP_CFG: dict[str, list[cfg.CFG]] = {
         cfg.CFG.from_text("S -> $ | S S1\nS1 -> a b"),
     ],
     "a b*c*": [
-        cfg.CFG.from_text(
-            "S -> S1 S2 S3\nS1 -> a\nS2 -> $ | S2 b\nS3 -> $ | c S3"),
+        cfg.CFG.from_text("S -> S1 S2 S3\nS1 -> a\nS2 -> $ | S2 b\nS3 -> $ | c S3"),
         cfg.CFG.from_text("S -> a S2 S3\nS2 -> S2 b | $\nS3 -> c | $ | S3 S3"),
     ],
     "(a|b|c|d|e)*": [
@@ -51,8 +50,7 @@ REGEXP_CFG: dict[str, list[cfg.CFG]] = {
         cfg.CFG.from_text(
             "S -> S1 S2\nS1 -> S1 S1 | $ | S3 c\n S2 -> d | e\n S3 -> b S3 | $ | a S3"
         ),
-        cfg.CFG.from_text(
-            "S -> S1 d | S1 e\nS1 -> S1 S3 c | $\nS3 -> b S3 | $ | a S3"),
+        cfg.CFG.from_text("S -> S1 d | S1 e\nS1 -> S1 S3 c | $\nS3 -> b S3 | $ | a S3"),
     ],
 }
 
@@ -70,15 +68,13 @@ GRAMMARS = [
         cfg.CFG.from_text("S -> $ | a S b | c S d S | S S S"),
     ],
     [
-        cfg.CFG.from_text(
-            "S -> $ | S1 S S2\nS1 -> a | c\n S2 -> b | d\n S -> S S"),
+        cfg.CFG.from_text("S -> $ | S1 S S2\nS1 -> a | c\n S2 -> b | d\n S -> S S"),
         cfg.CFG.from_text("S -> $ | S1 S S2 S\n S1 -> a | c\nS2 -> b | d"),
         cfg.CFG.from_text("S -> $ | S a S b | S a S d | S c S d | S c S b"),
         cfg.CFG.from_text("S -> $ | S1 S S2 | S S S\nS1 -> a | c\nS2-> b | d"),
     ],
     [
-        cfg.CFG.from_text(
-            "S -> S S | Se S1 Se\nSe -> $ | Se e\nS1 -> $ | a S1 b"),
+        cfg.CFG.from_text("S -> S S | Se S1 Se\nSe -> $ | Se e\nS1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> S1 | S S | e\nS1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> S2 S | $\n S2 -> e | S1\n S1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> $ | S1 S | e S\n S1 -> $ | a S1 b"),
@@ -94,8 +90,7 @@ GRAMMARS_DIFFERENT = [
         "S -> S1 | S2\nS1 -> Sab | S1 c\nSab -> $ | a Sab b\nS2 -> Sbc | a S2\nSbc -> b Sbc c"
     ),
     cfg.CFG.from_text("S -> a | b | S c S | S d S | e S f | g S"),
-    cfg.CFG.from_text(
-        "S -> $ | a S b | b S a | e S f | S S | c S d | f S c | f S e"),
+    cfg.CFG.from_text("S -> $ | a S b | b S a | e S f | S S | c S d | f S c | f S e"),
 ]
 
 EBNF_GRAMMARS = [
@@ -165,8 +160,7 @@ class TestReachabilityTensorAlgorithm:
         start_nodes, final_nodes = generate_rnd_start_and_final(graph)
         eq_cfpqs = [
             cfpq_with_tensor(
-                cfg_to_rsm(deepcopy(cf_gram)), deepcopy(
-                    graph), start_nodes, final_nodes
+                cfg_to_rsm(deepcopy(cf_gram)), deepcopy(graph), start_nodes, final_nodes
             )
             for cf_gram in eq_grammars
         ]
@@ -183,8 +177,7 @@ class TestReachabilityTensorAlgorithm:
             deepcopy(grammar), deepcopy(graph), start_nodes, final_nodes
         )
         tensor = cfpq_with_tensor(
-            cfg_to_rsm(deepcopy(grammar)), deepcopy(
-                graph), start_nodes, final_nodes
+            cfg_to_rsm(deepcopy(grammar)), deepcopy(graph), start_nodes, final_nodes
         )
         assert (hellings == matrix) and (matrix == tensor)
 
@@ -199,8 +192,7 @@ class TestReachabilityTensorAlgorithm:
             cfg_to_rsm(cfg_grammar), deepcopy(graph), start_nodes, final_nodes
         )
         ebnf_cfpq = cfpq_with_tensor(
-            ebnf_to_rsm(ebnf_grammar), deepcopy(
-                graph), start_nodes, final_nodes
+            ebnf_to_rsm(ebnf_grammar), deepcopy(graph), start_nodes, final_nodes
         )
         assert ebnf_cfpq == cfg_cfpq
 
@@ -211,8 +203,7 @@ class TestReachabilityTensorAlgorithm:
         start_nodes, final_nodes = generate_rnd_start_and_final(graph)
         eq_cfpqs = [
             cfpq_with_tensor(
-                cfg_to_rsm(deepcopy(cf_gram)), deepcopy(
-                    graph), start_nodes, final_nodes
+                cfg_to_rsm(deepcopy(cf_gram)), deepcopy(graph), start_nodes, final_nodes
             )
             for cf_gram in cfg_list
         ]

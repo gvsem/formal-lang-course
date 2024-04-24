@@ -147,8 +147,7 @@ def cfpq_with_tensor(
 ) -> set[tuple[int, int]]:
 
     mat = automaton.rsm_to_mat(rsm)
-    graph_mat = automaton.nfa_to_mat(
-        graph_to_nfa(graph, start_nodes, final_nodes))
+    graph_mat = automaton.nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
     mat_inds = mat.indexes_dict()
     graph_mat_inds = graph_mat.indexes_dict()
 
@@ -163,7 +162,8 @@ def cfpq_with_tensor(
     while True:
 
         closure = automaton.transitive_closure(
-            automaton.intersect_automata(mat, graph_mat)).nonzero()
+            automaton.intersect_automata(mat, graph_mat)
+        ).nonzero()
         closure = list(zip(*closure))
 
         curr_nnz = len(closure)
@@ -181,18 +181,23 @@ def cfpq_with_tensor(
                     graph_mat.m[var] = dok_matrix((n, n), dtype=bool)
                 graph_mat.m[var][i % n, j % n] = True
 
-    return {(graph_mat_inds[i], graph_mat_inds[j])
-            for _, m in graph_mat.m.items()
-            for i, j in zip(*m.nonzero())
-            if graph_mat_inds[i] in mat.start and graph_mat_inds[j] in mat.final}
+    return {
+        (graph_mat_inds[i], graph_mat_inds[j])
+        for _, m in graph_mat.m.items()
+        for i, j in zip(*m.nonzero())
+        if graph_mat_inds[i] in mat.start and graph_mat_inds[j] in mat.final
+    }
 
 
 def cfg_to_rsm(cfg: pyformlang.cfg.CFG) -> pyformlang.rsa.RecursiveAutomaton:
     prods = {}
     for p in cfg.productions:
         if len(p.body) == 0:
-            regex = Regex(" ".join("$" if isinstance(var, Epsilon)
-                          else var.value for var in p.body))
+            regex = Regex(
+                " ".join(
+                    "$" if isinstance(var, Epsilon) else var.value for var in p.body
+                )
+            )
         else:
             regex = Regex("$")
         if Symbol(p.head) not in prods:
@@ -205,7 +210,9 @@ def cfg_to_rsm(cfg: pyformlang.cfg.CFG) -> pyformlang.rsa.RecursiveAutomaton:
         for var, regex in prods.items()
     }
 
-    return pyformlang.rsa.RecursiveAutomaton(set(prods.keys()), Symbol("S"), set(prods.values()))
+    return pyformlang.rsa.RecursiveAutomaton(
+        set(prods.keys()), Symbol("S"), set(prods.values())
+    )
 
 
 def ebnf_to_rsm(ebnf: str) -> pyformlang.rsa.RecursiveAutomaton:

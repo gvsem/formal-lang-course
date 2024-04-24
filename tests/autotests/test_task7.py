@@ -38,8 +38,7 @@ REGEXP_CFG: dict[str, list[cfg.CFG]] = {
         cfg.CFG.from_text("S -> $ | S S1\nS1 -> a b"),
     ],
     "a b*c*": [
-        cfg.CFG.from_text(
-            "S -> S1 S2 S3\nS1 -> a\nS2 -> $ | S2 b\nS3 -> $ | c S3"),
+        cfg.CFG.from_text("S -> S1 S2 S3\nS1 -> a\nS2 -> $ | S2 b\nS3 -> $ | c S3"),
         cfg.CFG.from_text("S -> a S2 S3\nS2 -> S2 b | $\nS3 -> c | $ | S3 S3"),
     ],
     "(a|b|c|d|e)*": [
@@ -51,8 +50,7 @@ REGEXP_CFG: dict[str, list[cfg.CFG]] = {
         cfg.CFG.from_text(
             "S -> S1 S2\nS1 -> S1 S1 | $ | S3 c\n S2 -> d | e\n S3 -> b S3 | $ | a S3"
         ),
-        cfg.CFG.from_text(
-            "S -> S1 d | S1 e\nS1 -> S1 S3 c | $\nS3 -> b S3 | $ | a S3"),
+        cfg.CFG.from_text("S -> S1 d | S1 e\nS1 -> S1 S3 c | $\nS3 -> b S3 | $ | a S3"),
     ],
 }
 
@@ -70,15 +68,13 @@ GRAMMARS = [
         cfg.CFG.from_text("S -> $ | a S b | c S d S | S S S"),
     ],
     [
-        cfg.CFG.from_text(
-            "S -> $ | S1 S S2\nS1 -> a | c\n S2 -> b | d\n S -> S S"),
+        cfg.CFG.from_text("S -> $ | S1 S S2\nS1 -> a | c\n S2 -> b | d\n S -> S S"),
         cfg.CFG.from_text("S -> $ | S1 S S2 S\n S1 -> a | c\nS2 -> b | d"),
         cfg.CFG.from_text("S -> $ | S a S b | S a S d | S c S d | S c S b"),
         cfg.CFG.from_text("S -> $ | S1 S S2 | S S S\nS1 -> a | c\nS2-> b | d"),
     ],
     [
-        cfg.CFG.from_text(
-            "S -> S S | Se S1 Se\nSe -> $ | Se e\nS1 -> $ | a S1 b"),
+        cfg.CFG.from_text("S -> S S | Se S1 Se\nSe -> $ | Se e\nS1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> S1 | S S | e\nS1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> S2 S | $\n S2 -> e | S1\n S1 -> $ | a S1 b"),
         cfg.CFG.from_text("S -> $ | S1 S | e S\n S1 -> $ | a S1 b"),
