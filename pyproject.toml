@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "formal-lang-course"
+version = "0.1.0"
+description = ""
+authors = ["Georgii Semenov <themrgeorgeous@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+networkx = "3.2.1"
+cfpq-data = "^4.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
