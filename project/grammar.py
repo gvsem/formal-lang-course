@@ -140,11 +140,14 @@ def cfpq_with_matrix(
 
 
 def cfpq_with_tensor(
-    rsm: pyformlang.rsa.RecursiveAutomaton,
+    rsm: pyformlang.cfg.CFG | pyformlang.rsa.RecursiveAutomaton,
     graph: DiGraph,
     start_nodes: set[int] = None,
     final_nodes: set[int] = None,
 ) -> set[tuple[int, int]]:
+
+    if isinstance(rsm, pyformlang.cfg.CFG):
+        rsm = cfg_to_rsm(rsm)
 
     mat = automaton.rsm_to_mat(rsm)
     graph_mat = automaton.nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
