@@ -1,3 +1,4 @@
+from copy import deepcopy
 import pyformlang
 import scipy
 from project import automaton
@@ -9,7 +10,7 @@ from pyformlang.regular_expression import Regex
 from project.automata import graph_to_nfa, regex_to_dfa
 from pyformlang.rsa.box import Box
 from pyformlang.rsa import RecursiveAutomaton
-from pyformlang.finite_automaton import Symbol
+from pyformlang.finite_automaton import State, Symbol
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 
 
@@ -241,3 +242,64 @@ def ebnf_to_rsm(ebnf: str) -> pyformlang.rsa.RecursiveAutomaton:
     }
 
     return RecursiveAutomaton(set(prods.keys()), Symbol("S"), set(prods.values()))
+
+
+def cfpq_with_gll(
+    rsm: pyformlang.cfg.CFG | pyformlang.rsa.RecursiveAutomaton,
+    graph: DiGraph,
+    start_nodes: set[int] = None,
+    final_nodes: set[int] = None,
+) -> set[tuple[int, int]]:
+
+    if isinstance(rsm, pyformlang.cfg.CFG):
+        rsm = cfg_to_rsm(rsm)
+
+    if start_nodes is None:
+        start_nodes = graph.nodes
+    if final_nodes is None:
+        final_nodes = graph.nodes
+
+    initial_label = "S"
+    if rsm.initial_label.value is not None:
+        initial_label = rsm.initial_label.value
+
+    result = set()
+
+    start_dfa_state = rsm.boxes[initial_label].dfa.start_state.value
+    start_dfa = rsm.boxes[initial_label].dfa.to_dict()
+    start_dfa.setdefault(State(start_dfa_state), dict())
+
+    stack = {(v, initial_label): set() for v in start_nodes}
+    visited = {
+        (v, (start_dfa_state, initial_label), (v, initial_label)) for v in start_nodes
+    }
+    queue = deepcopy(visited)
+
+    def push(node, rsm_context, stack_context):
+        s = (node, rsm_context, stack_context)
+        if s not in visited:
+            visited.add(s)
+            queue.add(s)
+
+    while len(queue) > 0:
+
+        v, (rsm_state, rsm_label), (stack_node, stack_label) = queue.pop()
+        stack_state = (stack_node, stack_label)
+
+        if (
+            stack_node in start_nodes
+            and stack_label == start_dfa_state
+            and v in final_nodes
+        ):
+            result.add((stack_node, v))
+        for rsm_state_, stack_state_ in stack.setdefault(stack_state, set()):
+            push(v, rsm_state_, stack_state_)
+
+        for symbol, _ in start_dfa.items():
+            if symbol in rsm.labels:
+                start_sym_state = rsm.boxes[symbol].dfa.start_state.value
+                rsm_state_ = (start_sym_state, symbol.value)
+                stack_state_ = (v, symbol.value)
+                push(v, rsm_state_, stack_state_)
+
+    return result
