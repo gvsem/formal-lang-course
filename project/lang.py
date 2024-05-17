@@ -1,6 +1,7 @@
 from project.language.project.languageLexer import languageLexer
 from project.language.project.languageParser import languageParser
 from project.language.project.languageVisitor import languageVisitor
+from project.language.project.languageListener import languageListener
 
 from antlr4 import *
 from antlr4.InputStream import InputStream
@@ -8,15 +9,10 @@ from antlr4.InputStream import InputStream
 
 class CountVisitor(languageVisitor):
 
-    ctx = None
     count = 0
 
-    def __init__(self, ctx):
+    def __init__(self):
         super(languageVisitor, self).__init__()
-        self.ctx = ctx
-
-    def visit(self):
-        ParseTreeWalker().walk(self, self.ctx)
 
     def enterEveryRule(self, rule):
         self.count += 1
@@ -27,18 +23,13 @@ class CountVisitor(languageVisitor):
 
 class SerializeVisitor(languageVisitor):
 
-    ctx = None
     res = ""
 
-    def __init__(self, ctx):
+    def __init__(self):
         super(languageVisitor, self).__init__()
-        self.ctx = ctx
-
-    def visit(self):
-        ParseTreeWalker().walk(self, self.ctx)
 
     def enterEveryRule(self, rule):
-        res += self.rules[rule.getRuleIndex()]
+        res += rule.getText()
 
     def exitEveryRule(self, rule):
         pass
@@ -55,8 +46,12 @@ def prog_to_tree(program: str) -> tuple[ParserRuleContext, bool]:
 
 
 def nodes_count(tree: ParserRuleContext) -> int:
-    return CountVisitor(tree).count
+    visitor = CountVisitor()
+    tree.accept(visitor)
+    return visitor.count
 
 
 def tree_to_prog(tree: ParserRuleContext) -> str:
-    return SerializeVisitor(tree).res
+    visitor = SerializeVisitor()
+    tree.accept(visitor)
+    return visitor.res
