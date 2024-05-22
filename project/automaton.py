@@ -184,7 +184,7 @@ def intersect_automata(
     automaton1: FiniteAutomaton,
     automaton2: FiniteAutomaton,
     matrix_class_id="csr",
-    g=True
+    g=True,
 ) -> FiniteAutomaton:
     automaton1.g = automaton2.g = not g
     labels = automaton1.labels() & automaton2.labels()
