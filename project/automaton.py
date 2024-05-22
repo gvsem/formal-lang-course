@@ -1,3 +1,4 @@
+import itertools
 from typing import Iterable
 from networkx import MultiDiGraph
 import pyformlang
@@ -56,7 +57,18 @@ class FiniteAutomaton:
         return nfa.accepts(real_word)
 
     def is_empty(self) -> bool:
-        return len(self.m) == 0 or len(list(self.m.values())[0]) == 0
+        if len(self.m) == 0:
+            return True
+        m = sum(self.m.values())
+        for _ in range(m.shape[0]):
+            m += m @ m
+        if m.shape[0] != 0 or m.shape[1] != 0:
+            return True
+        for u in self.start:
+            for v in self.final:
+                if m[u, v] != 0:
+                    return False
+        return True
 
     def size(self):
         return len(self.mapping)
