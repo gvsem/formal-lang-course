@@ -23,6 +23,7 @@ class FiniteAutomaton:
     start = None
     final = None
     mapping = None
+    g = True
 
     def __init__(
         self,
@@ -69,18 +70,7 @@ class FiniteAutomaton:
         return {i: v for v, i in self.mapping.items()}
 
     def labels(self):
-        return self.m.keys()
-
-    # currently unused
-    def matrix_of_direct_sum_with(self, other):
-        m = dict()
-        e = csr_matrix((other.size(), other.size()))
-        for label in self.m.keys():
-            if label in other.m.keys():
-                m[label] = block_diag((self.m[label], other.m[label]), format="csr")
-            else:
-                m[label] = block_diag((self.m[label], e), format="csr")
-        return m
+        return self.mapping.keys() if self.g else self.m.keys()
 
 
 def nfa_to_mat(
@@ -134,9 +124,13 @@ def transitive_closure(automaton: FiniteAutomaton):
 
 
 def intersect_automata(
-    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton, matrix_class_id="csr"
+    automaton1: FiniteAutomaton,
+    automaton2: FiniteAutomaton,
+    matrix_class_id="csr",
+    g=True
 ) -> FiniteAutomaton:
-    labels = automaton1.m.keys() & automaton2.m.keys()
+    automaton1.g = automaton2.g = not g
+    labels = automaton1.labels() & automaton2.labels()
     m = dict()
     start = set()
     final = set()
@@ -165,7 +159,7 @@ def reachability_with_constraints_transitive(
 ) -> list[tuple[object, object]]:
 
     intersection = intersect_automata(
-        graph_nfa, regex_dfa, matrix_class_id=matrix_class_id
+        graph_nfa, regex_dfa, matrix_class_id=matrix_class_id, g=False
     )
     closure = transitive_closure(intersection)
 
@@ -232,13 +226,18 @@ def reachability_with_constraints(
 
     for v in fa.start_inds():
         front = get_front(v)
+        last_nnz = -1
         for _ in range(m * n):
             front = sum(
                 [matrix_class((m, m + n), dtype=bool)]
                 + [diagonalized(front @ adj[label]) for label in labels]
             )
-            for i in constraints_fa.final_inds():
-                for j in fa.final_inds():
-                    if front[i, j + m]:
-                        result[v].add(j)
+            k = front[:, m:].nonzero()
+            for x, y in zip(k[0], k[1]):
+                if x in constraints_fa.final_inds() and y in fa.final_inds():
+                    result[v].add(y)
+            if hash(str(k)) == last_nnz:
+                break
+            last_nnz = hash(str(k))
+
     return result
