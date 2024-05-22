@@ -13,11 +13,11 @@ from pyformlang import cfg
 
 # Fix import statements in try block to run tests
 try:
-    from project.task2 import graph_to_nfa, regex_to_dfa
-    from project.task3 import FiniteAutomaton
-    from project.task4 import reachability_with_constraints
-    from project.task7 import cfpq_with_matrix
-    from project.task6 import cfpq_with_hellings
+    from project.automata import graph_to_nfa, regex_to_dfa
+    from project.automaton import FiniteAutomaton
+    from project.automaton import reachability_with_constraints
+    from project.grammar import cfpq_with_matrix, cfpq_with_hellings
+    from typing import Tuple
 except ImportError:
     pytestmark = pytest.mark.skip("Task 7 is not ready to test!")
 
