@@ -97,7 +97,6 @@ def cfpq_with_hellings(
         if v in start_nodes and u in final_nodes and Variable(N_i) == cfg.start_symbol
     }
 
-
 def cfpq_with_matrix(
     cfg,
     graph,
