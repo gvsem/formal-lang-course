@@ -19,20 +19,27 @@ remove:
 
 add: 'add' ('vertex' | 'edge') expr 'to' VAR;
 
-expr: NUM | CHAR | VAR | edge_expr | set_expr | regexp | select;
+expr:
+	NUM			# Expr_num
+	| CHAR		# Expr_char
+	| VAR		# Expr_var
+	| edge_expr	# Expr_edge_expr
+	| set_expr	# Expr_set_expr
+	| regexp	# Expr_regexp
+	| select	# Expr_select;
 
 set_expr: '[' expr (',' expr)* ']';
 
 edge_expr: '(' expr ',' expr ',' expr ')';
 
 regexp:
-	CHAR
-	| VAR
-	| '(' regexp ')'
-	| regexp '|' regexp
-	| regexp '^' range
-	| regexp '.' regexp
-	| regexp '&' regexp;
+	CHAR				# Regex_char
+	| VAR				# Regex_var
+	| '(' regexp ')'	# Regex_braces
+	| regexp '|' regexp	# Regex_union
+	| regexp '^' range	# Regex_repeat
+	| regexp '.' regexp	# Regex_concat
+	| regexp '&' regexp	# Regex_intersect;
 
 range: '[' NUM '..' NUM? ']';
 
